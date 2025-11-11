@@ -40,15 +40,15 @@ async function getDashboardData(userId: string) {
   const nextWeek = addDays(today, 7)
 
   const upcomingSessions = activeCycle?.sessions.filter(
-    (session) => session.date >= today && session.date < nextWeek
+    (session: typeof activeCycle.sessions[0]) => session.date >= today && session.date < nextWeek
   ) || []
 
   // Calculate this week's stats
   const thisWeekSessions = activeCycle?.sessions.filter(
-    (session) => session.date >= today && session.date < nextWeek
+    (session: typeof activeCycle.sessions[0]) => session.date >= today && session.date < nextWeek
   ) || []
 
-  const completedThisWeek = thisWeekSessions.filter(s => s.completed).length
+  const completedThisWeek = thisWeekSessions.filter((s: typeof thisWeekSessions[0]) => s.completed).length
   const totalThisWeek = thisWeekSessions.length
 
   return {

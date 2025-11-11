@@ -2,7 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { TrainingRules } from '@/types'
-import { differenceInWeeks } from 'date-fns'
+import { differenceInWeeks, format as formatDate, addDays } from 'date-fns'
 
 const sessionSchema = z.object({
   day: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
@@ -61,6 +61,14 @@ export async function generateTrainingPlan(params: GeneratePlanParams) {
   } else if (weeksUntilRace < 16) {
     trainingPhase = 'Build'
   }
+
+  // Generate date strings for the prompt
+  const week1Dates = Array.from({ length: 7 }, (_, i) => 
+    formatDate(addDays(startDate, i), 'yyyy-MM-dd')
+  )
+  const week2Dates = Array.from({ length: 7 }, (_, i) => 
+    formatDate(addDays(startDate, i + 7), 'yyyy-MM-dd')
+  )
 
   const prompt = `You are an experienced triathlon coach. Generate a 14-day training plan for an Ironman athlete.
 

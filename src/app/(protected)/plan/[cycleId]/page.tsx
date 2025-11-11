@@ -29,10 +29,10 @@ async function getCycleData(cycleId: string, userId: string) {
   const week2Start = addDays(week1Start, 7)
 
   const week1Sessions = cycle.sessions.filter(
-    (s) => s.date >= week1Start && s.date < week2Start
+    (s: typeof cycle.sessions[0]) => s.date >= week1Start && s.date < week2Start
   )
   const week2Sessions = cycle.sessions.filter(
-    (s) => s.date >= week2Start
+    (s: typeof cycle.sessions[0]) => s.date >= week2Start
   )
 
   return {
@@ -60,7 +60,7 @@ async function toggleSessionComplete(sessionId: string) {
 export default async function CyclePage({
   params,
 }: {
-  params: { cycleId: string }
+  params: Promise<{ cycleId: string }>
 }) {
   const session = await auth.api.getSession({
     headers: await headers()
@@ -70,7 +70,8 @@ export default async function CyclePage({
     redirect('/login')
   }
 
-  const data = await getCycleData(params.cycleId, session.user.id)
+  const resolvedParams = await params
+  const data = await getCycleData(resolvedParams.cycleId, session.user.id)
 
   if (!data) {
     redirect('/dashboard')
@@ -113,7 +114,7 @@ export default async function CyclePage({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {week1Sessions.map((session) => (
+            {week1Sessions.map((session: typeof week1Sessions[0]) => (
               <SessionCard key={session.id} session={session} />
             ))}
           </div>
@@ -130,7 +131,7 @@ export default async function CyclePage({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {week2Sessions.map((session) => (
+            {week2Sessions.map((session: typeof week2Sessions[0]) => (
               <SessionCard key={session.id} session={session} />
             ))}
           </div>
@@ -140,7 +141,9 @@ export default async function CyclePage({
   )
 }
 
-function SessionCard({ session }: { session: any }) {
+type SessionType = NonNullable<Awaited<ReturnType<typeof getCycleData>>>['week1Sessions'][0]
+
+function SessionCard({ session }: { session: SessionType }) {
   return (
     <div className={`p-4 border rounded-lg ${session.completed ? 'bg-green-50 border-green-200' : ''}`}>
       <div className="flex items-start justify-between">
