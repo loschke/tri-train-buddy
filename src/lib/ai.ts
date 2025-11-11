@@ -94,11 +94,14 @@ ${performanceMetrics.trainingLoad ? `- Training Load: ${performanceMetrics.train
 - Swim: Max ${athleteProfile.trainingRules.maxSwimPerWeek}x per week
 - Gym: ${athleteProfile.trainingRules.gymPerWeek}x per week (combinable with run/bike up to 1h)
 
+**Week 1 Dates:** ${week1Dates.join(', ')}
+**Week 2 Dates:** ${week2Dates.join(', ')}
+
 ${feedback ? `**Last Cycle Feedback:**\n${feedback}\n` : ''}
 
 ${constraints ? `**Constraints for Next 14 Days:**\n${constraints}\n` : ''}
 
-**Instructions:**
+**CRITICAL INSTRUCTIONS:**
 1. Create a periodized 14-day plan appropriate for the ${trainingPhase} training phase
 2. Respect the athlete's run tolerance (don't exceed ${performanceMetrics.runToleranceKm} km/week)
 3. Keep training load progressive but manageable
@@ -108,29 +111,40 @@ ${constraints ? `**Constraints for Next 14 Days:**\n${constraints}\n` : ''}
 7. Include at least one brick workout (bike→run) per cycle
 8. Provide a brief rationale for this plan phase
 
-**Important:**
+**IMPORTANT SCHEMA REQUIREMENTS:**
 - Monday must be REST if mondayRest is true
-- Provide realistic, specific workout descriptions
-- Use proper zone designations (Z1, Z2, Tempo, Threshold, etc.)
-- Include warm-up and cool-down in descriptions
+- week1 must be an ARRAY of exactly 7 session objects (NOT a JSON string)
+- week2 must be an ARRAY of exactly 7 session objects (NOT a JSON string)
+- Use the exact dates provided above for each session
+- Each session object must have: day (string), date (ISO string), discipline (string), durationMinutes (number), intensityZone (string or null), description (string)
 
-Return a structured response with:
-- week1: Array of 7 sessions (Monday-Sunday) starting from the provided date
-- week2: Array of 7 sessions for the following week
-- rationale: Brief explanation of the plan
-
-Each session must include:
-- day: Day of week (Monday, Tuesday, etc.)
-- date: ISO date string
-- discipline: RUN, BIKE, SWIM, GYM, or REST
-- durationMinutes: Total duration in minutes
-- intensityZone: "Z1" | "Z2" | "Tempo" | "Threshold" | "VO2max" | null (for REST)
-- description: Detailed workout description with paces/watts/intervals`
+**OUTPUT FORMAT:**
+Return a JSON object with this exact structure:
+{
+  "rationale": "Brief explanation of the plan",
+  "week1": [
+    {
+      "day": "Monday",
+      "date": "${week1Dates[0]}",
+      "discipline": "REST",
+      "durationMinutes": 0,
+      "intensityZone": null,
+      "description": "Complete rest day"
+    },
+    ... 6 more sessions for week 1
+  ],
+  "week2": [
+    ... 7 sessions for week 2
+  ]
+}`
 
   const result = await generateObject({
     model: anthropic('claude-sonnet-4-20250514'),
     schema: planSchema,
+    schemaName: 'TrainingPlan',
+    schemaDescription: 'A 14-day training plan with two weeks of sessions',
     prompt,
+    mode: 'json',
   })
 
   return result.object
